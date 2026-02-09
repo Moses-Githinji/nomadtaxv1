@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TaxCountdown } from "@/components/dashboard/TaxCountdown";
 import { TripleTank } from "@/components/dashboard/TripleTank";
+import { RecentTransactions } from "@/components/dashboard/RecentTransactions";
+import { AutoLogStatus } from "@/components/dashboard/AutoLogStatus";
 import { calculateTax } from "@/lib/tax-logic";
 import { Play, RotateCcw } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 export function DashboardPage() {
   const [balances, setBalances] = useState({
@@ -12,6 +15,16 @@ export function DashboardPage() {
   });
   
   const [isSweeping, setIsSweeping] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    // Get current user
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, []);
 
   const handleSweep = () => {
     setIsSweeping(true);
@@ -41,39 +54,50 @@ export function DashboardPage() {
     }, 1000);
   };
 
+  // Get user display name
+  const getUserName = () => {
+    if (!user) return "Nomad";
+    return user.user_metadata?.full_name || 
+           user.user_metadata?.name || 
+           user.email?.split('@')[0] || 
+           "Nomad";
+  };
+
   return (
     <div className="space-y-8">
       {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Dashboard</h1>
-          <p className="text-slate-400 mt-1">Welcome back, Nomad. Here is your financial fortress.</p>
-        </div>
-        <div className="flex items-center gap-4">
-             <button 
-                onClick={handleSweep}
-                disabled={isSweeping}
-                className="flex items-center gap-2 px-4 py-2 bg-nomad-green hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-bold rounded-lg transition-all active:scale-95 shadow-lg shadow-nomad-green/20"
-             >
-                {isSweeping ? <RotateCcw className="animate-spin" size={18} /> : <Play size={18} fill="currentColor" />}
-                {isSweeping ? "Allocating..." : "Sweep Salary"}
-             </button>
-             <TaxCountdown />
-        </div>
+      <header className="mb-8">
+        <h1 className="text-3xl font-bold text-white tracking-tight">Dashboard</h1>
+        <p className="text-slate-400 mt-1">
+          Welcome back, <span className="text-nomad-green font-semibold">{getUserName()}</span>. Here is your financial fortress.
+        </p>
       </header>
 
-      {/* Triple Tank Section */}
+      {/* Triple Tank Section (Net Worth Overview) */}
       <TripleTank balances={balances} />
       
-      {/* Future Sections Placeholder */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-          <div className="h-64 rounded-xl border border-slate-800 bg-slate-900/50 p-6 flex items-center justify-center text-slate-500">
-             Transactions (Coming Soon)
-          </div>
-          <div className="h-64 rounded-xl border border-slate-800 bg-slate-900/50 p-6 flex flex-col items-center justify-center text-slate-500 gap-2">
-             <span className="text-lg font-medium">Auto-Log Active</span>
-             <span className="text-sm">eTIMS Receipt Scanner Ready</span>
-          </div>
+      {/* Action Buttons Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Sweep Salary */}
+        <button 
+          onClick={handleSweep}
+          disabled={isSweeping}
+          className="flex items-center justify-center gap-2 px-4 py-3 bg-nomad-green hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-bold rounded-lg transition-all active:scale-95 shadow-lg shadow-nomad-green/20"
+        >
+          {isSweeping ? <RotateCcw className="animate-spin" size={18} /> : <Play size={18} fill="currentColor" />}
+          <span>{isSweeping ? "Allocating..." : "Sweep Salary"}</span>
+        </button>
+        
+        {/* Tax Countdown */}
+        <div className="md:col-span-2 flex items-center justify-center">
+          <TaxCountdown />
+        </div>
+      </div>
+
+      {/* Dashboard Sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <RecentTransactions />
+          <AutoLogStatus />
       </div>
     </div>
   );

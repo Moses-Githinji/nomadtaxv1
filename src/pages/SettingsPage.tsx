@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { User, Bell, Shield, Wallet, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ModeToggle } from "@/components/mode-toggle";
+
 
 export function SettingsPage() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -74,13 +74,7 @@ export function SettingsPage() {
                 <div className="space-y-6">
                     <h2 className="text-xl font-semibold text-white border-b border-slate-800 pb-4">App Preferences</h2>
                     <div className="space-y-6">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h3 className="text-white font-medium">Appearance</h3>
-                                <p className="text-sm text-slate-400">Switch between light and dark mode</p>
-                            </div>
-                            <ModeToggle />
-                        </div>
+
                         
                         <div className="flex items-center justify-between">
                              <div>
